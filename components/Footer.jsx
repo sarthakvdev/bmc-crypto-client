@@ -10,7 +10,6 @@ const Footer = () => {
       <Link href={link}>
         <a className="font-bold hover:underline" target="_blank">{creator}</a>
       </Link>
-      <p className="ml-2">| wagmi</p>
     </footer>
   );
 };
