@@ -5,11 +5,16 @@ module.exports = {
   ],
   theme: {
     fontFamily: {
-      sans: ['Graphik', 'sans-serif'],
+      sans: ['Inter', 'sans-serif'],
       serif: ['Merriweather', 'serif'],
       mono: ['Anonymous Pro', 'monospace']
     },
-    extend: {},
+    extend: {
+      backgroundImage: {
+        "main-background": "url('/images/bgGrad.png')",
+        "main-blues": "url('/images/bgBlues.jpg')",
+      }
+    },
   },
   plugins: [],
 }

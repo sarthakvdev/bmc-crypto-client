@@ -3,19 +3,34 @@ import { ToastContainer, toast } from "react-toastify";
 import { ethers } from "ethers";
 import "react-toastify/dist/ReactToastify.css";
 import abi from "../utils/coffeePortal.json";
+import { useForm } from "react-hook-form";
 
 const Homepage = () => {
   // contract address
-  const contractAddress = "";
+  const contractAddress = "0x6339C2911E6FFa607D2F9C34A20148301bdb7c94";
+
   // abi contract
   const contractABI = abi.abi;
 
-  const [currentAccount, setCurrentAccount] = useState("dd");
+  // States
+  const [currentAccount, setCurrentAccount] = useState("");
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
-
-  // All coffee
   const [allCoffee, setAllCoffee] = useState([]);
+
+  // form hook
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
+
+  const onSubmit = (data) => {
+    console.log("data:", data);
+  };
+
+  console.log(watch("example"));
 
   const toastConfigRight = {
     position: "top-right",
@@ -35,32 +50,34 @@ const Homepage = () => {
     pauseOnHover: true,
     draggable: true,
     progress: undefined,
-  }
+  };
 
   // Check the authorization to access the wallet
   const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
-      const accounts = ethereum.request({ method: "eth_accounts" });
+      const accounts = await ethereum.request({ method: "eth_accounts" });
 
       if (accounts.length !== 0) {
         const account = accounts[0];
         setCurrentAccount(account);
         toast.success("🦄 Wallet is connected", toastConfigRight);
       } else {
-        toast.warn("Make sure you have a Metamask connected!", toastConfigRight);
+        toast.warn(
+          "Make sure you have a Metamask connected!",
+          toastConfigRight
+        );
       }
     } catch (error) {
       toast.error(`${error.message}`, toastConfigRight);
     }
-    return ethereum ? true : false;
   };
 
   // connect Wallet method
   const connectWallet = async () => {
     try {
       const { ethereum } = window;
-      if(!ethereum) {
+      if (!ethereum) {
         toast.warn("Make sure your Metamask is connected!", toastConfigRight);
         return;
       }
@@ -77,7 +94,7 @@ const Homepage = () => {
   const buyCoffee = async () => {
     try {
       const { ethereum } = window;
-      if(ethereum) {
+      if (ethereum) {
         // provider, signer, coffeePortalContract
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
@@ -90,7 +107,7 @@ const Homepage = () => {
         // get total coffee
         let count = await coffeePortalContract.getTotalCoffee();
         console.log("Retrieved Total Coffee:", count.toNumber());
-        
+
         // executing acutal coffee Txn from smart contract
         const coffeeTxn = await coffeePortalContract.buyCoffee(
           message ? message : "Enjoy your Coffee!",
@@ -118,7 +135,7 @@ const Homepage = () => {
       } else {
         console.log("Ethereum object doesn't exists!");
       }
-    } catch(error) {
+    } catch (error) {
       toast.error(`${error.message}`, toastConfigRight);
     }
   };
@@ -126,7 +143,7 @@ const Homepage = () => {
   const getAllCoffee = async () => {
     try {
       const { ethereum } = window;
-      if(ethereum) {
+      if (ethereum) {
         // provider, signer, coffeePortalContract
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
@@ -136,6 +153,7 @@ const Homepage = () => {
           signer
         );
 
+        // Get the list of all the coffees
         const coffees = await coffeePortalContract.getAllCoffee();
 
         // need – address, message, name, timestamp in UI
@@ -144,7 +162,7 @@ const Homepage = () => {
             address: coffee.giver,
             timestamp: new Date(coffee.timestamp * 1000),
             message: coffee.message,
-            name: coffee.name
+            name: coffee.name,
           };
         });
 
@@ -153,72 +171,80 @@ const Homepage = () => {
       } else {
         console.log("ethereum object doesn't exists!");
       }
-    } catch(error) {
+    } catch (error) {
       toast.error(`${error.message}`, toastConfigRight);
     }
-  }
+  };
 
-  const RenderWalletConnected = () => (
-    <form className="rounded-t-2xl sm:rounded-lg bg-white border border-black px-3 py-16 sm:py-8 flex flex-col justify-center sm:shadow-lg">
-      <div className="mb-4 text-left">
-        <label
-          className="block text-gray-700 text-sm font-bold mb-2"
-          htmlFor="name"
-        >
-          Name
-        </label>
-        <input
-          className="border border-black rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          id="name"
-          type="text"
-          placeholder="Name"
-          // onChange={handleOnNameChange}
-          required
-        />
-      </div>
+  // React component – Render when connected to wallet
+  const RenderWalletConnected = () => {
+    const handleNameChange = (event) => {
+      setName(event.target.value);
+    };
 
-      <div className="mb-4 text-left">
-        <label
-          className="block text-gray-700 text-sm font-bold mb-2"
-          htmlFor="message"
-        >
-          Send the Creator a Message
-        </label>
+    const handleMessageChange = (event) => {
+      setMessage(event.target.value);
+    };
 
-        <textarea
-          className="form-textarea mt-1 block w-full py-2 px-3 border border-black rounded text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          rows="3"
-          placeholder="Message"
-          id="message"
-          // onChange={handleOnMessageChange}
-          required
-        ></textarea>
-      </div>
+    return (
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-white px-5 py-10 rounded-xl flex flex-col justify-center shadow-xl"
+      >
+        <div className="mb-4 text-left">
+          <label
+            className="block text-gray-700 text-base font-bold mb-2"
+            htmlFor="name"
+          >
+            Name
+          </label>
+          <input
+            value={name}
+            onChange={handleNameChange}
+            className="border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="name"
+            type="text"
+            placeholder="Name"
+            required
+            {...register("example")}
+          />
+        </div>
 
-      <div className="border">
-        <button
-          className="bg-blue-500 active:bg-blue-600 text-center text-white font-bold py-2 w-full rounded-md border border-black shadow-md hover:shadow-lg focus:outline-none focus:shadow-outline"
-          onClick={buyCoffee}
-        >
-          Support $5
-        </button>
-      </div>
-    </form>
-  );
+        <div className="mb-4 text-left">
+          <label
+            className="block text-gray-700 text-base font-bold mb-2"
+            htmlFor="message"
+          >
+            Send the Creator a Message
+          </label>
 
-  const RenderWalletNotConnected = () => (
-    <>
-      <button className="px-6 py-2 mt-5 bg-blue-500 active:bg-blue-600 rounded-full font-bold text-white border-2 border-black shadow-md hover:shadow-lg">
-        Connect Wallet
-      </button>
-    </>
-  );
+          <textarea
+            value={message}
+            onChange={handleMessageChange}
+            className="form-textarea mt-1 block w-full py-2 px-3 border rounded-md text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            rows="3"
+            placeholder="Your message"
+            id="message"
+            required
+          ></textarea>
+        </div>
+
+        <div>
+          <button
+            className="bg-blue-500 active:bg-blue-600 text-center text-white font-bold py-2 w-full border border-blue-300 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:shadow-outline"
+            onClick={buyCoffee}
+          >
+            Support $5
+          </button>
+        </div>
+      </form>
+    );
+  };
 
   useEffect(() => {
-    let coffeePoralContract;
+    let coffeePortalContract;
     getAllCoffee();
     checkIfWalletIsConnected();
-
     const onNewCoffee = (from, timestamp, message, name) => {
       console.log("New Coffee:", from, timestamp, message, name);
       setAllCoffee((prevState) => [
@@ -227,20 +253,21 @@ const Homepage = () => {
           address: from,
           timestamp: new Date(timestamp * 1000),
           message,
-          name
+          name,
         },
       ]);
     };
 
-    if(window.ethereum) {
+    if (window.ethereum) {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
 
-      const coffeePortalContract = new ethers.Contract(
+      coffeePortalContract = new ethers.Contract(
         contractAddress,
         contractABI,
         signer
       );
+      // todo:calling the NewCoffee event (Need to understand this)
       coffeePortalContract.on("NewCoffee", onNewCoffee);
     }
 
@@ -251,32 +278,69 @@ const Homepage = () => {
     };
   }, []);
 
-  const handleOnMessageChange = (event) => {
-    const { value } = event.target;
-    setMessage(value);
-  };
-
-  const handleOnNameChange = (event) => {
-    const { value } = event.target;
-    setName(value);
-  };
-
   return (
-    <main className="relative flex flex-col justify-end sm:justify-center items-center w-full flex-1 text-center">
-      <p className="text-2xl md:text-6xl text-blue-500 font-black">
-        Buy me a Coffee
-      </p>
-      <p className="text-2xl md:text-4xl text-blue-500 font-black">
-        (on Crypto)
-      </p>
-      <div className="sm:max-w-xs mt-8 w-full">
-        {currentAccount ? (
-          <RenderWalletConnected />
-        ) : (
-          <RenderWalletNotConnected />
-        )}
-      </div>
-    </main>
+    <>
+      <main className="flex flex-col border border-red-500 items-center justify-center w-full flex-1 text-center">
+        <div className="flex flex-col sm:flex-row items-center">
+          <p className="text-4xl sm:text-6xl text-gray-800 font-semibold drop-shadow ">
+            Buy me a Coffee
+          </p>
+          <div className="px-4 py-2 bg-gray-800 border border-gray-700 mt-2 sm:mt-0 sm:ml-3 rounded-full shadow-md">
+            <p className="text-sm sm:text-base text-white font-semibold">
+              on Crypto
+            </p>
+          </div>
+        </div>
+
+        <div className=" w-2/3 sm:max-w-xs mt-8">
+          {currentAccount ? (
+            <RenderWalletConnected />
+          ) : (
+            <button
+              onClick={connectWallet}
+              className="px-6 py-3 mt-5 bg-blue-500 active:bg-blue-600 rounded-xl font-bold text-white shadow-md hover:shadow-lg"
+            >
+              Connect Wallet
+            </button>
+          )}
+        </div>
+
+        {allCoffee.map((coffee, index) => {
+          return (
+            <div className="border-l-2 mt-10" key={index}>
+              <div className="transform transition cursor-pointer hover:-translate-y-2 ml-10 relative flex items-center px-6 py-4 bg-blue-800 text-white rounded mb-10 flex-col md:flex-row space-y-4 md:space-y-0">
+                {/* <!-- Dot Following the Left Vertical Line --> */}
+                <div className="w-5 h-5 bg-blue-600 absolute -left-10 transform -translate-x-2/4 rounded-full z-10 mt-2 md:mt-0"></div>
+
+                {/* <!-- Line that connecting the box with the vertical line --> */}
+                <div className="w-10 h-1 bg-green-300 absolute -left-10 z-0"></div>
+
+                {/* <!-- Content that showing in the box --> */}
+                <div className="flex-auto">
+                  <h1 className="text-md">Supporter: {coffee.name}</h1>
+                  <h1 className="text-md">Message: {coffee.message}</h1>
+                  <h3>Address: {coffee.address}</h3>
+                  <h1 className="text-md font-bold">
+                    TimeStamp: {coffee.timestamp.toString()}
+                  </h1>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </main>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+    </>
   );
 };
 
