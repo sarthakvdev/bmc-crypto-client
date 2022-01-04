@@ -5,7 +5,7 @@ const Footer = () => {
   const link = "https://twitter.com/0xSarthak";
 
   return (
-    <footer className="flex items-center fixed left-0 right-0 bottom-0 justify-center w-full h-24">
+    <footer className="flex items-center left-0 right-0 bottom-0 justify-center w-full h-24">
       <p className="mr-2">made by</p>
       <Link href={link}>
         <a className="font-bold hover:underline" target="_blank">{creator}</a>
